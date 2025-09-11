@@ -9,15 +9,12 @@ const createApp = (): express.Application => {
   const app = express();
 
   // Security middleware
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: false,
+  }));
   
   // CORS configuration
-  app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['http://localhost:3000'] // Add your frontend domains here
-      : ['http://localhost:3000', 'http://127.0.0.1:3000'],
-    credentials: true,
-  }));
+  app.use(cors());
 
   // Body parsing middleware
   app.use(express.json({ limit: '10mb' }));

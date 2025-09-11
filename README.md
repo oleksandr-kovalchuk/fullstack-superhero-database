@@ -21,7 +21,7 @@ A full-stack web application for managing a superhero database with CRUD operati
    ```bash
    git clone https://github.com/oleksandr-kovalchuk/fullstack-superhero-database.git
    cd fullstack-superhero-database
-   docker-compose up --build
+   docker-compose up --build -d
    ```
 
 2. **Access the application**

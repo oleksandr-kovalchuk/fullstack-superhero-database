@@ -181,13 +181,14 @@ export default function HomePage() {
             ) : (
               <div>
                 <div className="flex flex-wrap justify-center gap-6">
-                  {superheroes?.map((superhero) => (
+                  {superheroes?.map((superhero, index) => (
                     <div key={superhero.id} className="w-full sm:w-80 md:w-72 lg:w-80 xl:w-72">
                       <SuperheroCard
                         superhero={superhero}
                         onView={handleViewSuperhero}
                         onEdit={handleEditSuperhero}
                         onDelete={confirmDelete}
+                        priority={index < 6} // Prioritize first 6 images (likely above the fold)
                       />
                     </div>
                   ))}

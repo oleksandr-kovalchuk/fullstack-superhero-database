@@ -271,6 +271,7 @@ export const SuperheroForm = ({
                     width={96}
                     height={96}
                     className="w-full h-24 object-cover rounded"
+                    style={{ width: 'auto', height: 'auto' }}
                     unoptimized
                   />
                   <div className="mt-1 text-xs text-gray-600 truncate">

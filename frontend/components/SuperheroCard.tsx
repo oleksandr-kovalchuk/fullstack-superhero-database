@@ -7,6 +7,7 @@ interface SuperheroCardProps {
   onView: (superhero: SuperheroListItem) => void;
   onEdit: (superhero: SuperheroListItem) => void;
   onDelete: (id: string) => void;
+  priority?: boolean;
 }
 
 export const SuperheroCard = ({
@@ -14,6 +15,7 @@ export const SuperheroCard = ({
   onView,
   onEdit,
   onDelete,
+  priority = false,
 }: SuperheroCardProps) => {
   const primaryImage = superhero.image;
 
@@ -28,6 +30,7 @@ export const SuperheroCard = ({
             height={192}
             className="w-full h-full object-contain"
             unoptimized
+            priority={priority}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

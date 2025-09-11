@@ -37,14 +37,31 @@ PORT=3001
 NODE_ENV=development
 ```
 
+### Local Development (Without Docker)
+```bash
+# Backend
+cd backend
+npm install
+npm run db:generate
+npm run db:push
+npm run dev
+
+# Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+```
+
 ## 🎨 Features
 
-- CRUD operations for superheroes
-- Multiple image uploads per superhero
-- Pagination and responsive design
-- Real-time UI updates
-- Comprehensive error handling
-- TypeScript support across the stack
+- **CRUD Operations**: Create, read, update, and delete superheroes
+- **Image Management**: Multiple image uploads per superhero with validation
+- **Responsive Design**: Mobile-first UI with Tailwind CSS
+- **State Management**: Zustand for efficient client-side state
+- **Data Validation**: Zod schemas for type-safe validation
+- **Database**: PostgreSQL with Prisma ORM and automatic migrations
+- **Security**: Helmet.js, CORS, file upload validation
+- **TypeScript**: Full-stack type safety
 
 ## 🐳 Docker Commands
 
@@ -59,12 +76,23 @@ docker-compose down
 docker-compose logs -f
 ```
 
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/superheroes` | Get all superheroes (paginated) |
+| GET | `/api/superheroes/:id` | Get superhero by ID |
+| POST | `/api/superheroes` | Create new superhero |
+| PUT | `/api/superheroes/:id` | Update superhero |
+| DELETE | `/api/superheroes/:id` | Delete superhero |
+
 ## 🚨 Troubleshooting
 
 **Common Issues:**
 - Ensure ports 3000, 3001, 5432, and 5050 are available
 - Wait for PostgreSQL to fully start before accessing the application
 - Check uploads directory permissions
+- For file upload issues, verify image format (JPEG/PNG) and size limits
 
 **Reset Database:**
 ```bash

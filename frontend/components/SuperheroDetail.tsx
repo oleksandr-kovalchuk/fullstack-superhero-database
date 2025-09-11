@@ -21,7 +21,7 @@ export const SuperheroDetail = ({
           <h1 className="text-3xl font-bold text-gray-900">
             {superhero.nickname}
           </h1>
-          <p className="text-xl text-gray-600 mt-1">{superhero.real_name}</p>
+          <p className="text-xl text-gray-600 mt-1">{superhero.realName}</p>
         </div>
         <div className="flex space-x-2">
           <Button variant="secondary" onClick={onEdit}>
@@ -40,14 +40,14 @@ export const SuperheroDetail = ({
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Images</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {superhero.images.map((image, index) => (
+            {superhero.images.map((image) => (
               <div
-                key={index}
+                key={image.id}
                 className="aspect-square bg-gray-200 rounded-lg overflow-hidden"
               >
                 <img
-                  src={image.url}
-                  alt={image.alt || `${superhero.nickname} image ${index + 1}`}
+                  src={`http://localhost:3001/uploads/${image.filename}`}
+                  alt={image.originalName}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -73,7 +73,7 @@ export const SuperheroDetail = ({
             Origin Story
           </h2>
           <p className="text-gray-700 leading-relaxed">
-            {superhero.origin_description}
+            {superhero.originDescription}
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export const SuperheroDetail = ({
             Catch Phrase
           </h2>
           <blockquote className="text-lg italic text-gray-600 border-l-4 border-blue-500 pl-4">
-            "{superhero.catch_phrase}"
+            "{superhero.catchPhrase}"
           </blockquote>
         </div>
       </div>

@@ -8,7 +8,7 @@ export const createSuperheroSchema = z.object({
     .min(1, 'Real name is required')
     .max(100, 'Real name must be less than 100 characters'),
   originDescription: z.string()
-    .min(10, 'Origin description must be at least 10 characters')
+    .min(1, 'Origin description must be at least 10 characters')
     .max(2000, 'Origin description must be less than 2000 characters'),
   superpowers: z.string()
     .min(1, 'Superpowers are required')
@@ -28,7 +28,7 @@ export const updateSuperheroSchema = z.object({
     .max(100, 'Real name must be less than 100 characters')
     .optional(),
   originDescription: z.string()
-    .min(10, 'Origin description must be at least 10 characters')
+    .min(1, 'Origin description must be at least 10 characters')
     .max(2000, 'Origin description must be less than 2000 characters')
     .optional(),
   superpowers: z.string()

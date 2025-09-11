@@ -1,10 +1,10 @@
-import { Superhero } from '@/types/superhero';
+import { SuperheroListItem } from '@/types/superhero';
 import { Button } from '@/components/ui/Button';
 
 interface SuperheroCardProps {
-  superhero: Superhero;
-  onView: (superhero: Superhero) => void;
-  onEdit: (superhero: Superhero) => void;
+  superhero: SuperheroListItem;
+  onView: (superhero: SuperheroListItem) => void;
+  onEdit: (superhero: SuperheroListItem) => void;
   onDelete: (id: string) => void;
 }
 
@@ -14,15 +14,15 @@ export const SuperheroCard = ({
   onEdit,
   onDelete,
 }: SuperheroCardProps) => {
-  const primaryImage = superhero.images?.[0];
+  const primaryImage = superhero.image;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="h-48 bg-gray-200 flex items-center justify-center">
         {primaryImage ? (
           <img
-            src={primaryImage.url}
-            alt={primaryImage.alt || superhero.nickname}
+            src={`http://localhost:3001/uploads/${primaryImage.filename}`}
+            alt={superhero.nickname}
             className="w-full h-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -59,7 +59,7 @@ export const SuperheroCard = ({
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           {superhero.nickname}
         </h3>
-        <p className="text-sm text-gray-600 mb-4">{superhero.real_name}</p>
+        <p className="text-sm text-gray-600 mb-4">Click to view details</p>
 
         <div className="flex space-x-2">
           <Button variant="primary" size="sm" onClick={() => onView(superhero)}>

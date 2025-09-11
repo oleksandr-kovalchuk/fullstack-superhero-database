@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Superhero,
   CreateSuperheroData,
-  SuperheroImage,
 } from '@/types/superhero';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -23,43 +22,50 @@ export const SuperheroForm = ({
 }: SuperheroFormProps) => {
   const [formData, setFormData] = useState({
     nickname: '',
-    real_name: '',
-    origin_description: '',
+    realName: '',
+    originDescription: '',
     superpowers: '',
-    catch_phrase: '',
+    catchPhrase: '',
   });
-  const [images, setImages] = useState<Omit<SuperheroImage, 'id'>[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [newImageAlt, setNewImageAlt] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (superhero) {
       setFormData({
         nickname: superhero.nickname,
-        real_name: superhero.real_name,
-        origin_description: superhero.origin_description,
+        realName: superhero.realName,
+        originDescription: superhero.originDescription,
         superpowers: superhero.superpowers,
-        catch_phrase: superhero.catch_phrase,
+        catchPhrase: superhero.catchPhrase,
       });
-      setImages(
-        superhero.images.map((img) => ({ url: img.url, alt: img.alt }))
-      );
+      // For editing, we don't pre-populate files, user needs to upload new ones if needed
+      setSelectedFiles([]);
+      setPreviewUrls([]);
     }
   }, [superhero]);
+
+  // Cleanup preview URLs when component unmounts or files change
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.nickname.trim()) newErrors.nickname = 'Nickname is required';
-    if (!formData.real_name.trim())
-      newErrors.real_name = 'Real name is required';
-    if (!formData.origin_description.trim())
-      newErrors.origin_description = 'Origin description is required';
+    if (!formData.realName.trim())
+      newErrors.realName = 'Real name is required';
+    if (!formData.originDescription.trim())
+      newErrors.originDescription = 'Origin description is required';
     if (!formData.superpowers.trim())
       newErrors.superpowers = 'Superpowers are required';
-    if (!formData.catch_phrase.trim())
-      newErrors.catch_phrase = 'Catch phrase is required';
+    if (!formData.catchPhrase.trim())
+      newErrors.catchPhrase = 'Catch phrase is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -73,7 +79,7 @@ export const SuperheroForm = ({
     try {
       await onSubmit({
         ...formData,
-        images,
+        images: selectedFiles.length > 0 ? selectedFiles : undefined,
       });
     } catch (error) {
       console.error('Form submission error:', error);
@@ -87,19 +93,57 @@ export const SuperheroForm = ({
     }
   };
 
-  const addImage = () => {
-    if (newImageUrl.trim()) {
-      setImages((prev) => [
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Validate file types
+    const validFiles = files.filter(file => {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      return validTypes.includes(file.type);
+    });
+
+    if (validFiles.length !== files.length) {
+      setErrors(prev => ({
         ...prev,
-        { url: newImageUrl.trim(), alt: newImageAlt.trim() },
-      ]);
-      setNewImageUrl('');
-      setNewImageAlt('');
+        images: 'Only JPEG, PNG, GIF, and WebP images are allowed.'
+      }));
+      return;
+    }
+
+    // Validate file sizes (5MB limit)
+    const oversizedFiles = validFiles.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setErrors(prev => ({
+        ...prev,
+        images: 'File size must be less than 5MB.'
+      }));
+      return;
+    }
+
+    // Clear any previous errors
+    if (errors.images) {
+      setErrors(prev => ({ ...prev, images: '' }));
+    }
+
+    // Update selected files
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    
+    // Create preview URLs
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    // Revoke the preview URL to free memory
+    URL.revokeObjectURL(previewUrls[index]);
+    
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -114,19 +158,19 @@ export const SuperheroForm = ({
 
       <Input
         label="Real Name *"
-        value={formData.real_name}
-        onChange={(e) => handleInputChange('real_name', e.target.value)}
-        error={errors.real_name}
+        value={formData.realName}
+        onChange={(e) => handleInputChange('realName', e.target.value)}
+        error={errors.realName}
         placeholder="e.g., Clark Kent"
       />
 
       <Textarea
         label="Origin Description *"
-        value={formData.origin_description}
+        value={formData.originDescription}
         onChange={(e) =>
-          handleInputChange('origin_description', e.target.value)
+          handleInputChange('originDescription', e.target.value)
         }
-        error={errors.origin_description}
+        error={errors.originDescription}
         placeholder="Describe the superhero's origin story..."
         rows={4}
       />
@@ -142,76 +186,93 @@ export const SuperheroForm = ({
 
       <Input
         label="Catch Phrase *"
-        value={formData.catch_phrase}
-        onChange={(e) => handleInputChange('catch_phrase', e.target.value)}
-        error={errors.catch_phrase}
+        value={formData.catchPhrase}
+        onChange={(e) => handleInputChange('catchPhrase', e.target.value)}
+        error={errors.catchPhrase}
         placeholder="e.g., Look, up in the sky!"
       />
 
       <div className="space-y-4">
         <h4 className="text-lg font-medium text-gray-900">Images</h4>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Image URL"
-            value={newImageUrl}
-            onChange={(e) => setNewImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Upload Images (optional)
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            multiple
+            onChange={handleFileChange}
+            className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-medium
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           />
-          <Input
-            label="Image Alt Text (optional)"
-            value={newImageAlt}
-            onChange={(e) => setNewImageAlt(e.target.value)}
-            placeholder="Description of the image"
-          />
+          {errors.images && (
+            <p className="text-sm text-red-600">{errors.images}</p>
+          )}
+          <p className="text-xs text-gray-500">
+            Accepted formats: JPEG, PNG, GIF, WebP. Maximum size: 5MB per file.
+          </p>
         </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={addImage}
-          disabled={!newImageUrl.trim()}
-        >
-          Add Image
-        </Button>
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2">
+            <h5 className="font-medium text-gray-700">Selected Images:</h5>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {selectedFiles.map((file, index) => (
+                <div
+                  key={index}
+                  className="relative group bg-gray-50 p-2 rounded-md"
+                >
+                  <img
+                    src={previewUrls[index]}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-24 object-cover rounded"
+                  />
+                  <div className="mt-1 text-xs text-gray-600 truncate">
+                    {file.name}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {images.length > 0 && (
+        {superhero && superhero.images.length > 0 && (
           <div className="space-y-2">
             <h5 className="font-medium text-gray-700">Current Images:</h5>
-            {images.map((image, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-gray-50 p-3 rounded-md"
-              >
-                <div className="flex items-center space-x-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {superhero.images.map((image) => (
+                <div key={image.id} className="bg-gray-50 p-2 rounded-md">
                   <img
-                    src={image.url}
-                    alt={image.alt || 'Superhero image'}
-                    className="w-12 h-12 object-cover rounded"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
+                    src={`http://localhost:3001/uploads/${image.filename}`}
+                    alt={image.originalName}
+                    className="w-full h-24 object-cover rounded"
                   />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {image.url}
-                    </p>
-                    {image.alt && (
-                      <p className="text-xs text-gray-500">{image.alt}</p>
-                    )}
+                  <div className="mt-1 text-xs text-gray-600 truncate">
+                    {image.originalName}
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="sm"
-                  onClick={() => removeImage(index)}
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">
+              To update images, upload new ones above. Current images will be replaced.
+            </p>
           </div>
         )}
       </div>

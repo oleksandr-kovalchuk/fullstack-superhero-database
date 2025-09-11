@@ -1,19 +1,23 @@
 import { create } from 'zustand';
 import {
   Superhero,
+  SuperheroListItem,
   CreateSuperheroData,
   UpdateSuperheroData,
   SuperheroListResponse,
+  SuperheroResponse,
 } from '@/types/superhero';
 
 interface SuperheroState {
-  superheroes: Superhero[];
+  superheroes: SuperheroListItem[];
   currentSuperhero: Superhero | null;
   pagination: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
   };
   loading: boolean;
   error: string | null;
@@ -47,10 +51,10 @@ const handleApiCall = async <T>(
     const response = await apiCall();
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || `HTTP error! status: ${response.status}`;
+        const details = errorData.details ? errorData.details.map((d: { field: string; message: string }) => `${d.field}: ${d.message}`).join(', ') : '';
+        throw new Error(details ? `${errorMessage} - ${details}` : errorMessage);
     }
 
     const data = await response.json();
@@ -73,6 +77,8 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
     limit: 5,
     total: 0,
     totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
   },
   loading: false,
   error: null,
@@ -80,10 +86,10 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
   fetchSuperheroes: async (page = 1, limit = 5) => {
     await handleApiCall(
       () => fetch(`${API_BASE_URL}/superheroes?page=${page}&limit=${limit}`),
-      (data: SuperheroListResponse) => {
+      (response: SuperheroListResponse) => {
         set({
-          superheroes: data.superheroes,
-          pagination: data.pagination,
+          superheroes: response.data,
+          pagination: response.pagination,
         });
       },
       (loading) => set({ loading }),
@@ -94,8 +100,8 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
   fetchSuperheroById: async (id: string) => {
     await handleApiCall(
       () => fetch(`${API_BASE_URL}/superheroes/${id}`),
-      (data: Superhero) => {
-        set({ currentSuperhero: data });
+      (response: SuperheroResponse) => {
+        set({ currentSuperhero: response.data });
       },
       (loading) => set({ loading }),
       (error) => set({ error })
@@ -104,17 +110,28 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
 
   createSuperhero: async (data: CreateSuperheroData) => {
     await handleApiCall(
-      () =>
-        fetch(`${API_BASE_URL}/superheroes`, {
+      () => {
+        const formData = new FormData();
+        formData.append('nickname', data.nickname);
+        formData.append('realName', data.realName);
+        formData.append('originDescription', data.originDescription);
+        formData.append('superpowers', data.superpowers);
+        formData.append('catchPhrase', data.catchPhrase);
+        
+        if (data.images && data.images.length > 0) {
+          Array.from(data.images).forEach((file) => {
+            formData.append('images', file);
+          });
+        }
+
+        return fetch(`${API_BASE_URL}/superheroes`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }),
-      (newSuperhero: Superhero) => {
-        const { superheroes } = get();
-        set({ superheroes: [newSuperhero, ...superheroes] });
+          body: formData,
+        });
+      },
+      () => {
+        // Refresh the list to get updated data
+        get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
       },
       (loading) => set({ loading }),
       (error) => set({ error })
@@ -123,22 +140,26 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
 
   updateSuperhero: async (data: UpdateSuperheroData) => {
     await handleApiCall(
-      () =>
-        fetch(`${API_BASE_URL}/superheroes/${data.id}`, {
+      () => {
+        const updatePayload: Partial<Omit<CreateSuperheroData, 'images'>> = {};
+        if (data.nickname) updatePayload.nickname = data.nickname;
+        if (data.realName) updatePayload.realName = data.realName;
+        if (data.originDescription) updatePayload.originDescription = data.originDescription;
+        if (data.superpowers) updatePayload.superpowers = data.superpowers;
+        if (data.catchPhrase) updatePayload.catchPhrase = data.catchPhrase;
+
+        return fetch(`${API_BASE_URL}/superheroes/${data.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
-        }),
-      (updatedSuperhero: Superhero) => {
-        const { superheroes } = get();
-        set({
-          superheroes: superheroes.map((hero) =>
-            hero.id === updatedSuperhero.id ? updatedSuperhero : hero
-          ),
-          currentSuperhero: updatedSuperhero,
+          body: JSON.stringify(updatePayload),
         });
+      },
+      (response: SuperheroResponse) => {
+        set({ currentSuperhero: response.data });
+        // Refresh the list to get updated data
+        get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
       },
       (loading) => set({ loading }),
       (error) => set({ error })
@@ -152,11 +173,9 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
           method: 'DELETE',
         }),
       () => {
-        const { superheroes } = get();
-        set({
-          superheroes: superheroes.filter((hero) => hero.id !== id),
-          currentSuperhero: null,
-        });
+        set({ currentSuperhero: null });
+        // Refresh the list to get updated data
+        get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
       },
       (loading) => set({ loading }),
       (error) => set({ error })

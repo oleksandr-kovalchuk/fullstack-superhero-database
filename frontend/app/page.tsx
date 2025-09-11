@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useSuperheroStore } from '@/store/superheroStore';
-import { Superhero } from '@/types/superhero';
+import { SuperheroListItem, CreateSuperheroData } from '@/types/superhero';
 import { SuperheroCard } from '@/components/SuperheroCard';
 import { SuperheroForm } from '@/components/SuperheroForm';
 import { SuperheroDetail } from '@/components/SuperheroDetail';
 import { Pagination } from '@/components/Pagination';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
@@ -27,7 +26,6 @@ export default function HomePage() {
     createSuperhero,
     updateSuperhero,
     deleteSuperhero,
-    setCurrentSuperhero,
     setError,
   } = useSuperheroStore();
 
@@ -44,25 +42,25 @@ export default function HomePage() {
     fetchSuperheroes(page, pagination.limit);
   };
 
-  const handleCreateSuperhero = async (data: any) => {
+  const handleCreateSuperhero = async (data: CreateSuperheroData) => {
     await createSuperhero(data);
     setViewMode('list');
   };
 
-  const handleUpdateSuperhero = async (data: any) => {
+  const handleUpdateSuperhero = async (data: CreateSuperheroData) => {
     if (currentSuperhero) {
       await updateSuperhero({ ...data, id: currentSuperhero.id });
       setViewMode('detail');
     }
   };
 
-  const handleViewSuperhero = (superhero: Superhero) => {
-    setCurrentSuperhero(superhero);
+  const handleViewSuperhero = async (superhero: SuperheroListItem) => {
+    await fetchSuperheroById(superhero.id);
     setViewMode('detail');
   };
 
-  const handleEditSuperhero = (superhero: Superhero) => {
-    setCurrentSuperhero(superhero);
+  const handleEditSuperhero = async (superhero: SuperheroListItem) => {
+    await fetchSuperheroById(superhero.id);
     setViewMode('edit');
   };
 

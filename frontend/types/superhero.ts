@@ -1,31 +1,44 @@
 export interface SuperheroImage {
   id: string;
-  url: string;
-  alt?: string;
+  filename: string;
+  originalName: string;
+  path: string;
+  size: number;
+  mimetype: string;
+}
+
+export interface SuperheroListItem {
+  id: string;
+  nickname: string;
+  image?: {
+    id: string;
+    filename: string;
+    path: string;
+  };
 }
 
 export interface Superhero {
   id: string;
   nickname: string;
-  real_name: string;
-  origin_description: string;
+  realName: string;
+  originDescription: string;
   superpowers: string;
-  catch_phrase: string;
+  catchPhrase: string;
   images: SuperheroImage[];
-  created_at?: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateSuperheroData {
   nickname: string;
-  real_name: string;
-  origin_description: string;
+  realName: string;
+  originDescription: string;
   superpowers: string;
-  catch_phrase: string;
-  images: Omit<SuperheroImage, 'id'>[];
+  catchPhrase: string;
+  images?: FileList | File[];
 }
 
-export interface UpdateSuperheroData extends Partial<CreateSuperheroData> {
+export interface UpdateSuperheroData extends Partial<Omit<CreateSuperheroData, 'images'>> {
   id: string;
 }
 
@@ -34,9 +47,17 @@ export interface PaginationData {
   limit: number;
   total: number;
   totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface SuperheroListResponse {
-  superheroes: Superhero[];
+  success: boolean;
+  data: SuperheroListItem[];
   pagination: PaginationData;
+}
+
+export interface SuperheroResponse {
+  success: boolean;
+  data: Superhero;
 }

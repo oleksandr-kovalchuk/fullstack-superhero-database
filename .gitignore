@@ -1,0 +1,17 @@
+node_modules/
+dist/
+uploads/
+.env
+.env.local
+.env.production
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Prisma
+prisma/migrations/
+
+# Database
+*.db
+*.sqlite

@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  Superhero,
-  CreateSuperheroData,
-} from '@/types/superhero';
+import { Superhero, CreateSuperheroData } from '@/types/superhero';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import { FILE_CONFIG } from '@/lib/constants';
+import { validateFiles, getImageUrl } from '@/lib/utils';
 import Image from 'next/image';
 
 interface SuperheroFormProps {
@@ -42,16 +41,14 @@ export const SuperheroForm = ({
         superpowers: superhero.superpowers,
         catchPhrase: superhero.catchPhrase,
       });
-      // For editing, we don't pre-populate files, user needs to upload new ones if needed
       setSelectedFiles([]);
       setPreviewUrls([]);
     }
   }, [superhero]);
 
-  // Cleanup preview URLs when component unmounts or files change
   useEffect(() => {
     return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [previewUrls]);
 
@@ -59,8 +56,7 @@ export const SuperheroForm = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.nickname.trim()) newErrors.nickname = 'Nickname is required';
-    if (!formData.realName.trim())
-      newErrors.realName = 'Real name is required';
+    if (!formData.realName.trim()) newErrors.realName = 'Real name is required';
     if (!formData.originDescription.trim())
       newErrors.originDescription = 'Origin description is required';
     if (!formData.superpowers.trim())
@@ -98,55 +94,36 @@ export const SuperheroForm = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
-    // Validate file types
-    const validFiles = files.filter(file => {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      return validTypes.includes(file.type);
-    });
 
-    if (validFiles.length !== files.length) {
-      setErrors(prev => ({
+    const { valid, errors: validationErrors } = validateFiles(files);
+
+    if (validationErrors.length > 0) {
+      setErrors((prev) => ({
         ...prev,
-        images: 'Only JPEG, PNG, GIF, and WebP images are allowed.'
+        images: validationErrors.join(' '),
       }));
       return;
     }
 
-    // Validate file sizes (5MB limit)
-    const oversizedFiles = validFiles.filter(file => file.size > 5 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      setErrors(prev => ({
-        ...prev,
-        images: 'File size must be less than 10MB.'
-      }));
-      return;
-    }
-
-    // Clear any previous errors
     if (errors.images) {
-      setErrors(prev => ({ ...prev, images: '' }));
+      setErrors((prev) => ({ ...prev, images: '' }));
     }
 
-    // Update selected files
-    setSelectedFiles(prev => [...prev, ...validFiles]);
-    
-    // Create preview URLs
-    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
-    setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+    setSelectedFiles((prev) => [...prev, ...valid]);
 
-    // Reset file input
+    const newPreviewUrls = valid.map((file) => URL.createObjectURL(file));
+    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const removeImage = (index: number) => {
-    // Revoke the preview URL to free memory
     URL.revokeObjectURL(previewUrls[index]);
-    
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -170,9 +147,7 @@ export const SuperheroForm = ({
       <Textarea
         label="Origin Description *"
         value={formData.originDescription}
-        onChange={(e) =>
-          handleInputChange('originDescription', e.target.value)
-        }
+        onChange={(e) => handleInputChange('originDescription', e.target.value)}
         error={errors.originDescription}
         placeholder="Describe the superhero's origin story..."
         rows={4}
@@ -205,7 +180,7 @@ export const SuperheroForm = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            accept={FILE_CONFIG.ALLOWED_TYPES.join(',')}
             multiple
             onChange={handleFileChange}
             className="block w-full text-sm text-gray-500
@@ -220,7 +195,12 @@ export const SuperheroForm = ({
             <p className="text-sm text-red-600">{errors.images}</p>
           )}
           <p className="text-xs text-gray-500">
-            Accepted formats: JPEG, PNG, GIF, WebP. Maximum size: 10MB per file.
+            Accepted formats:{' '}
+            {FILE_CONFIG.ALLOWED_TYPES.map((type) =>
+              type.split('/')[1].toUpperCase()
+            ).join(', ')}
+            . Maximum size: {Math.round(FILE_CONFIG.MAX_SIZE / (1024 * 1024))}MB
+            per file.
           </p>
         </div>
 
@@ -239,6 +219,7 @@ export const SuperheroForm = ({
                     width={96}
                     height={96}
                     className="w-full h-24 object-contain rounded bg-gray-100"
+                    style={{ width: 'auto', height: 'auto' }}
                     unoptimized
                   />
                   <div className="mt-1 text-xs text-gray-600 truncate">
@@ -266,7 +247,7 @@ export const SuperheroForm = ({
               {superhero.images.map((image) => (
                 <div key={image.id} className="bg-gray-50 p-2 rounded-md">
                   <Image
-                    src={`http://localhost:3001/uploads/${image.filename}`}
+                    src={getImageUrl(image.filename)}
                     alt={image.originalName}
                     width={96}
                     height={96}
@@ -281,7 +262,8 @@ export const SuperheroForm = ({
               ))}
             </div>
             <p className="text-xs text-gray-500">
-              To update images, upload new ones above. Current images will be replaced.
+              To update images, upload new ones above. Current images will be
+              replaced.
             </p>
           </div>
         )}

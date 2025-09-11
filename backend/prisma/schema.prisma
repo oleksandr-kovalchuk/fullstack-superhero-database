@@ -9,28 +9,32 @@ datasource db {
 
 model Superhero {
   id                 String            @id @default(cuid())
-  nickname           String            @unique
-  realName           String            @map("real_name")
+  nickname           String            @unique @db.VarChar(100)
+  realName           String            @map("real_name") @db.VarChar(100)
   originDescription  String            @map("origin_description") @db.Text
   superpowers        String            @db.Text
-  catchPhrase        String            @map("catch_phrase")
+  catchPhrase        String            @map("catch_phrase") @db.VarChar(200)
   images             SuperheroImage[]
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
 
+  @@index([nickname])
+  @@index([createdAt])
   @@map("superheroes")
 }
 
 model SuperheroImage {
   id           String    @id @default(cuid())
-  filename     String
-  originalName String    @map("original_name")
-  mimetype     String
+  filename     String    @db.VarChar(255)
+  originalName String    @map("original_name") @db.VarChar(255)
+  mimetype     String    @db.VarChar(100)
   size         Int
-  path         String
+  path         String    @db.VarChar(500)
   superheroId  String    @map("superhero_id")
   superhero    Superhero @relation(fields: [superheroId], references: [id], onDelete: Cascade)
   createdAt    DateTime  @default(now()) @map("created_at")
 
+  @@index([superheroId])
+  @@index([createdAt])
   @@map("superhero_images")
 }

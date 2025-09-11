@@ -1,5 +1,6 @@
 import { SuperheroListItem } from '@/types/superhero';
 import { Button } from '@/components/ui/Button';
+import { getImageUrl } from '@/lib/utils';
 import Image from 'next/image';
 
 interface SuperheroCardProps {
@@ -24,7 +25,7 @@ export const SuperheroCard = ({
       <div className="h-48 bg-gray-200 flex items-center justify-center">
         {primaryImage ? (
           <Image
-            src={`http://localhost:3001/uploads/${primaryImage.filename}`}
+            src={getImageUrl(primaryImage.filename)}
             alt={superhero.nickname}
             width={288}
             height={192}

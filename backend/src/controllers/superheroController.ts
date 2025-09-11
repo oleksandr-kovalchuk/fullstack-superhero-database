@@ -3,40 +3,57 @@ import * as superheroService from '../services/superheroService';
 import * as imageService from '../services/imageService';
 import { CreateSuperheroRequest, UpdateSuperheroRequest } from '../types';
 
+const createResponse = (
+  success: boolean,
+  data?: any,
+  error?: string,
+  message?: string,
+  pagination?: any
+) => ({
+  success,
+  ...(data && { data }),
+  ...(error && { error }),
+  ...(message && { message }),
+  ...(pagination && { pagination }),
+});
+
+const validateFiles = (files: any): boolean => {
+  return files && Array.isArray(files) && files.length > 0;
+};
+
 export const createSuperhero = async (req: Request, res: Response) => {
   const data: CreateSuperheroRequest = req.body;
 
-  // Check if nickname already exists
   const nicknameExists = await superheroService.checkNicknameExists(
     data.nickname
   );
   if (nicknameExists) {
-    return res.status(409).json({
-      success: false,
-      error: 'Nickname already exists',
-      message: 'A superhero with this nickname already exists',
-    });
+    return res
+      .status(409)
+      .json(
+        createResponse(
+          false,
+          null,
+          'Nickname already exists',
+          'A superhero with this nickname already exists'
+        )
+      );
   }
 
   const superhero = await superheroService.createSuperhero(data);
 
-  // Handle file uploads if present
-  if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-    await imageService.addImagesToSuperhero(superhero.id, req.files);
-    // Refetch superhero with images
+  if (validateFiles(req.files)) {
+    await imageService.addImagesToSuperhero(
+      superhero.id,
+      req.files as Express.Multer.File[]
+    );
     const updatedSuperhero = await superheroService.getSuperheroById(
       superhero.id
     );
-    return res.status(201).json({
-      success: true,
-      data: updatedSuperhero,
-    });
+    return res.status(201).json(createResponse(true, updatedSuperhero));
   }
 
-  res.status(201).json({
-    success: true,
-    data: superhero,
-  });
+  res.status(201).json(createResponse(true, superhero));
 };
 
 export const getSuperheroById = async (req: Request, res: Response) => {
@@ -45,64 +62,58 @@ export const getSuperheroById = async (req: Request, res: Response) => {
   const superhero = await superheroService.getSuperheroById(id);
 
   if (!superhero) {
-    return res.status(404).json({
-      success: false,
-      error: 'Superhero not found',
-    });
+    return res
+      .status(404)
+      .json(createResponse(false, null, 'Superhero not found'));
   }
 
-  res.json({
-    success: true,
-    data: superhero,
-  });
+  res.json(createResponse(true, superhero));
 };
 
 export const getAllSuperheroes = async (req: Request, res: Response) => {
-  const page = req.query.page ? Number(req.query.page) : 1;
-  const limit = req.query.limit ? Number(req.query.limit) : 5;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 5;
 
   const result = await superheroService.getAllSuperheroes(page, limit);
 
-  res.json({
-    success: true,
-    ...result,
-  });
+  res.json(
+    createResponse(true, result.data, undefined, undefined, result.pagination)
+  );
 };
 
 export const updateSuperhero = async (req: Request, res: Response) => {
   const { id } = req.params;
   const data: UpdateSuperheroRequest = req.body;
 
-  // Check if superhero exists
   const exists = await superheroService.checkSuperheroExists(id);
   if (!exists) {
-    return res.status(404).json({
-      success: false,
-      error: 'Superhero not found',
-    });
+    return res
+      .status(404)
+      .json(createResponse(false, null, 'Superhero not found'));
   }
 
-  // Check if nickname already exists (if nickname is being updated)
   if (data.nickname) {
     const nicknameExists = await superheroService.checkNicknameExists(
       data.nickname,
       id
     );
     if (nicknameExists) {
-      return res.status(409).json({
-        success: false,
-        error: 'Nickname already exists',
-        message: 'A superhero with this nickname already exists',
-      });
+      return res
+        .status(409)
+        .json(
+          createResponse(
+            false,
+            null,
+            'Nickname already exists',
+            'A superhero with this nickname already exists'
+          )
+        );
     }
   }
 
   const superhero = await superheroService.updateSuperhero(id, data);
 
-  res.json({
-    success: true,
-    data: superhero,
-  });
+  res.json(createResponse(true, superhero));
 };
 
 export const deleteSuperhero = async (req: Request, res: Response) => {
@@ -111,71 +122,61 @@ export const deleteSuperhero = async (req: Request, res: Response) => {
   const deleted = await superheroService.deleteSuperhero(id);
 
   if (!deleted) {
-    return res.status(404).json({
-      success: false,
-      error: 'Superhero not found',
-    });
+    return res
+      .status(404)
+      .json(createResponse(false, null, 'Superhero not found'));
   }
 
-  res.json({
-    success: true,
-    message: 'Superhero deleted successfully',
-  });
+  res.json(
+    createResponse(true, undefined, undefined, 'Superhero deleted successfully')
+  );
 };
 
 export const addImages = async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  // Check if superhero exists
   const exists = await superheroService.checkSuperheroExists(id);
   if (!exists) {
-    return res.status(404).json({
-      success: false,
-      error: 'Superhero not found',
-    });
+    return res
+      .status(404)
+      .json(createResponse(false, null, 'Superhero not found'));
   }
 
-  if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-    return res.status(400).json({
-      success: false,
-      error: 'No images provided',
-    });
+  if (!validateFiles(req.files)) {
+    return res
+      .status(400)
+      .json(createResponse(false, undefined, 'No images provided'));
   }
 
-  await imageService.addImagesToSuperhero(id, req.files);
+  await imageService.addImagesToSuperhero(
+    id,
+    req.files as Express.Multer.File[]
+  );
 
   const images = await imageService.getSuperheroImages(id);
 
-  res.json({
-    success: true,
-    message: 'Images added successfully',
-    data: images,
-  });
+  res.json(
+    createResponse(true, images, undefined, 'Images added successfully')
+  );
 };
 
 export const removeImage = async (req: Request, res: Response) => {
   const { id, imageId } = req.params;
 
-  // Check if superhero exists
   const exists = await superheroService.checkSuperheroExists(id);
   if (!exists) {
-    return res.status(404).json({
-      success: false,
-      error: 'Superhero not found',
-    });
+    return res
+      .status(404)
+      .json(createResponse(false, null, 'Superhero not found'));
   }
 
   const removed = await imageService.removeImageFromSuperhero(imageId, id);
 
   if (!removed) {
-    return res.status(404).json({
-      success: false,
-      error: 'Image not found',
-    });
+    return res.status(404).json(createResponse(false, null, 'Image not found'));
   }
 
-  res.json({
-    success: true,
-    message: 'Image removed successfully',
-  });
+  res.json(
+    createResponse(true, undefined, undefined, 'Image removed successfully')
+  );
 };

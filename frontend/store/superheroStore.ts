@@ -7,6 +7,8 @@ import {
   SuperheroListResponse,
   SuperheroResponse,
 } from '@/types/superhero';
+import { API_CONFIG, PAGINATION_CONFIG } from '@/lib/constants';
+import { createFormData, extractErrorMessage } from '@/lib/utils';
 
 interface SuperheroState {
   superheroes: SuperheroListItem[];
@@ -36,9 +38,6 @@ interface SuperheroActions {
 
 type SuperheroStore = SuperheroState & SuperheroActions;
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
 const handleApiCall = async <T>(
   apiCall: () => Promise<Response>,
   onSuccess: (data: T) => void,
@@ -51,17 +50,26 @@ const handleApiCall = async <T>(
     const response = await apiCall();
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.message || `HTTP error! status: ${response.status}`;
-        const details = errorData.details ? errorData.details.map((d: { field: string; message: string }) => `${d.field}: ${d.message}`).join(', ') : '';
-        throw new Error(details ? `${errorMessage} - ${details}` : errorMessage);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage =
+        errorData.error ||
+        errorData.message ||
+        `HTTP error! status: ${response.status}`;
+      const details = errorData.details
+        ? errorData.details
+            .map(
+              (d: { field: string; message: string }) =>
+                `${d.field}: ${d.message}`
+            )
+            .join(', ')
+        : '';
+      throw new Error(details ? `${errorMessage} - ${details}` : errorMessage);
     }
 
     const data = await response.json();
     onSuccess(data);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'An unexpected error occurred';
+    const errorMessage = extractErrorMessage(error);
     setError(errorMessage);
     console.error('API Error:', error);
   } finally {
@@ -73,8 +81,8 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
   superheroes: [],
   currentSuperhero: null,
   pagination: {
-    page: 1,
-    limit: 5,
+    page: PAGINATION_CONFIG.DEFAULT_PAGE,
+    limit: PAGINATION_CONFIG.DEFAULT_LIMIT,
     total: 0,
     totalPages: 0,
     hasNextPage: false,
@@ -83,9 +91,15 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchSuperheroes: async (page = 1, limit = 5) => {
+  fetchSuperheroes: async (
+    page = PAGINATION_CONFIG.DEFAULT_PAGE,
+    limit = PAGINATION_CONFIG.DEFAULT_LIMIT
+  ) => {
     await handleApiCall(
-      () => fetch(`${API_BASE_URL}/superheroes?page=${page}&limit=${limit}`),
+      () =>
+        fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}?page=${page}&limit=${limit}`
+        ),
       (response: SuperheroListResponse) => {
         set({
           superheroes: response.data,
@@ -99,7 +113,10 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
 
   fetchSuperheroById: async (id: string) => {
     await handleApiCall(
-      () => fetch(`${API_BASE_URL}/superheroes/${id}`),
+      () =>
+        fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}/${id}`
+        ),
       (response: SuperheroResponse) => {
         set({ currentSuperhero: response.data });
       },
@@ -111,27 +128,28 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
   createSuperhero: async (data: CreateSuperheroData) => {
     await handleApiCall(
       () => {
-        const formData = new FormData();
-        formData.append('nickname', data.nickname);
-        formData.append('realName', data.realName);
-        formData.append('originDescription', data.originDescription);
-        formData.append('superpowers', data.superpowers);
-        formData.append('catchPhrase', data.catchPhrase);
-        
-        if (data.images && data.images.length > 0) {
-          Array.from(data.images).forEach((file) => {
-            formData.append('images', file);
-          });
-        }
+        const formData = createFormData(
+          {
+            nickname: data.nickname,
+            realName: data.realName,
+            originDescription: data.originDescription,
+            superpowers: data.superpowers,
+            catchPhrase: data.catchPhrase,
+          },
+          data.images ? Array.from(data.images) : undefined
+        );
 
-        return fetch(`${API_BASE_URL}/superheroes`, {
-          method: 'POST',
-          body: formData,
-        });
+        return fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
       },
       () => {
-        // Refresh the list to get updated data
-        get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
+        const { pagination } = get();
+        get().fetchSuperheroes(pagination.page, pagination.limit);
       },
       (loading) => set({ loading }),
       (error) => set({ error })
@@ -144,52 +162,55 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
         const updatePayload: Partial<Omit<CreateSuperheroData, 'images'>> = {};
         if (data.nickname) updatePayload.nickname = data.nickname;
         if (data.realName) updatePayload.realName = data.realName;
-        if (data.originDescription) updatePayload.originDescription = data.originDescription;
+        if (data.originDescription)
+          updatePayload.originDescription = data.originDescription;
         if (data.superpowers) updatePayload.superpowers = data.superpowers;
         if (data.catchPhrase) updatePayload.catchPhrase = data.catchPhrase;
 
-        return fetch(`${API_BASE_URL}/superheroes/${data.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updatePayload),
-        });
+        return fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}/${data.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatePayload),
+          }
+        );
       },
       async (response: SuperheroResponse) => {
-        // If there are images to upload, handle them separately
         if (data.images && data.images.length > 0) {
-          const formData = new FormData();
-          Array.from(data.images).forEach((file) => {
-            formData.append('images', file);
-          });
+          const formData = createFormData({}, Array.from(data.images));
 
           try {
-            const imageResponse = await fetch(`${API_BASE_URL}/superheroes/${data.id}/images`, {
-              method: 'POST',
-              body: formData,
-            });
+            const imageResponse = await fetch(
+              `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}/${data.id}${API_CONFIG.ENDPOINTS.IMAGES}`,
+              {
+                method: 'POST',
+                body: formData,
+              }
+            );
 
             if (!imageResponse.ok) {
               throw new Error('Failed to upload images');
             }
           } catch (error) {
             console.error('Error uploading images:', error);
-            // Continue with the update even if image upload fails
           }
         }
 
-        // Fetch the updated superhero with all images
-        const updatedResponse = await fetch(`${API_BASE_URL}/superheroes/${data.id}`);
+        const updatedResponse = await fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}/${data.id}`
+        );
         if (updatedResponse.ok) {
           const updatedData = await updatedResponse.json();
           set({ currentSuperhero: updatedData.data });
         } else {
           set({ currentSuperhero: response.data });
         }
-        
-        // Refresh the list to get updated data
-        get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
+
+        const { pagination } = get();
+        get().fetchSuperheroes(pagination.page, pagination.limit);
       },
       (loading) => set({ loading }),
       (error) => set({ error })
@@ -199,13 +220,16 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
   deleteSuperhero: async (id: string) => {
     await handleApiCall(
       () =>
-        fetch(`${API_BASE_URL}/superheroes/${id}`, {
-          method: 'DELETE',
-        }),
+        fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SUPERHEROES}/${id}`,
+          {
+            method: 'DELETE',
+          }
+        ),
       () => {
         set({ currentSuperhero: null });
-        // Refresh the list to get updated data
-        get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
+        const { pagination } = get();
+        get().fetchSuperheroes(pagination.page, pagination.limit);
       },
       (loading) => set({ loading }),
       (error) => set({ error })

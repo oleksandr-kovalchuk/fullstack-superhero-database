@@ -38,7 +38,8 @@ export interface CreateSuperheroData {
   images?: FileList | File[];
 }
 
-export interface UpdateSuperheroData extends Partial<Omit<CreateSuperheroData, 'images'>> {
+export interface UpdateSuperheroData
+  extends Partial<Omit<CreateSuperheroData, 'images'>> {
   id: string;
   images?: FileList | File[];
 }

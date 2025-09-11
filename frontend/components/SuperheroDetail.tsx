@@ -1,5 +1,6 @@
 import { Superhero } from '@/types/superhero';
 import { Button } from '@/components/ui/Button';
+import { getImageUrl } from '@/lib/utils';
 import Image from 'next/image';
 
 interface SuperheroDetailProps {
@@ -47,7 +48,7 @@ export const SuperheroDetail = ({
                 className="aspect-square bg-gray-200 rounded-lg overflow-hidden"
               >
                 <Image
-                  src={`http://localhost:3001/uploads/${image.filename}`}
+                  src={getImageUrl(image.filename)}
                   alt={image.originalName}
                   width={300}
                   height={300}

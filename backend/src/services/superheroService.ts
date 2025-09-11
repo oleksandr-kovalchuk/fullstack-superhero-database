@@ -1,15 +1,38 @@
 import { getPrismaClient } from '../config/database';
-import { 
-  CreateSuperheroRequest, 
-  UpdateSuperheroRequest, 
-  SuperheroListItem, 
+import {
+  CreateSuperheroRequest,
+  UpdateSuperheroRequest,
+  SuperheroListItem,
   SuperheroDetails,
-  PaginatedResponse 
+  PaginatedResponse,
 } from '../types';
 
 const prisma = getPrismaClient();
 
-export const createSuperhero = async (data: CreateSuperheroRequest): Promise<SuperheroDetails> => {
+const IMAGE_SELECT_FIELDS = {
+  id: true,
+  filename: true,
+  originalName: true,
+  path: true,
+  size: true,
+  mimetype: true,
+} as const;
+
+const transformSuperheroToDetails = (superhero: any): SuperheroDetails => ({
+  id: superhero.id,
+  nickname: superhero.nickname,
+  realName: superhero.realName,
+  originDescription: superhero.originDescription,
+  superpowers: superhero.superpowers,
+  catchPhrase: superhero.catchPhrase,
+  images: superhero.images,
+  createdAt: superhero.createdAt.toISOString(),
+  updatedAt: superhero.updatedAt.toISOString(),
+});
+
+export const createSuperhero = async (
+  data: CreateSuperheroRequest
+): Promise<SuperheroDetails> => {
   const superhero = await prisma.superhero.create({
     data: {
       nickname: data.nickname,
@@ -20,44 +43,22 @@ export const createSuperhero = async (data: CreateSuperheroRequest): Promise<Sup
     },
     include: {
       images: {
-        select: {
-          id: true,
-          filename: true,
-          originalName: true,
-          path: true,
-          size: true,
-          mimetype: true,
-        },
+        select: IMAGE_SELECT_FIELDS,
       },
     },
   });
 
-  return {
-    id: superhero.id,
-    nickname: superhero.nickname,
-    realName: superhero.realName,
-    originDescription: superhero.originDescription,
-    superpowers: superhero.superpowers,
-    catchPhrase: superhero.catchPhrase,
-    images: superhero.images,
-    createdAt: superhero.createdAt.toISOString(),
-    updatedAt: superhero.updatedAt.toISOString(),
-  };
+  return transformSuperheroToDetails(superhero);
 };
 
-export const getSuperheroById = async (id: string): Promise<SuperheroDetails | null> => {
+export const getSuperheroById = async (
+  id: string
+): Promise<SuperheroDetails | null> => {
   const superhero = await prisma.superhero.findUnique({
     where: { id },
     include: {
       images: {
-        select: {
-          id: true,
-          filename: true,
-          originalName: true,
-          path: true,
-          size: true,
-          mimetype: true,
-        },
+        select: IMAGE_SELECT_FIELDS,
         orderBy: { createdAt: 'asc' },
       },
     },
@@ -65,17 +66,7 @@ export const getSuperheroById = async (id: string): Promise<SuperheroDetails | n
 
   if (!superhero) return null;
 
-  return {
-    id: superhero.id,
-    nickname: superhero.nickname,
-    realName: superhero.realName,
-    originDescription: superhero.originDescription,
-    superpowers: superhero.superpowers,
-    catchPhrase: superhero.catchPhrase,
-    images: superhero.images,
-    createdAt: superhero.createdAt.toISOString(),
-    updatedAt: superhero.updatedAt.toISOString(),
-  };
+  return transformSuperheroToDetails(superhero);
 };
 
 export const getAllSuperheroes = async (
@@ -109,7 +100,7 @@ export const getAllSuperheroes = async (
   const totalPages = Math.ceil(total / limit);
 
   return {
-    data: superheroes.map((superhero: { id: string; nickname: string; images: Array<{ id: string; filename: string; path: string }> }) => ({
+    data: superheroes.map((superhero) => ({
       id: superhero.id,
       nickname: superhero.nickname,
       image: superhero.images[0] || undefined,
@@ -130,40 +121,21 @@ export const updateSuperhero = async (
   data: UpdateSuperheroRequest
 ): Promise<SuperheroDetails | null> => {
   try {
+    const updateData = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined)
+    );
+
     const superhero = await prisma.superhero.update({
       where: { id },
-      data: {
-        ...(data.nickname && { nickname: data.nickname }),
-        ...(data.realName && { realName: data.realName }),
-        ...(data.originDescription && { originDescription: data.originDescription }),
-        ...(data.superpowers && { superpowers: data.superpowers }),
-        ...(data.catchPhrase && { catchPhrase: data.catchPhrase }),
-      },
+      data: updateData,
       include: {
         images: {
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            path: true,
-            size: true,
-            mimetype: true,
-          },
+          select: IMAGE_SELECT_FIELDS,
         },
       },
     });
 
-    return {
-      id: superhero.id,
-      nickname: superhero.nickname,
-      realName: superhero.realName,
-      originDescription: superhero.originDescription,
-      superpowers: superhero.superpowers,
-      catchPhrase: superhero.catchPhrase,
-      images: superhero.images,
-      createdAt: superhero.createdAt.toISOString(),
-      updatedAt: superhero.updatedAt.toISOString(),
-    };
+    return transformSuperheroToDetails(superhero);
   } catch (error: any) {
     if (error.code === 'P2025') {
       return null;
@@ -193,7 +165,10 @@ export const checkSuperheroExists = async (id: string): Promise<boolean> => {
   return count > 0;
 };
 
-export const checkNicknameExists = async (nickname: string, excludeId?: string): Promise<boolean> => {
+export const checkNicknameExists = async (
+  nickname: string,
+  excludeId?: string
+): Promise<boolean> => {
   const count = await prisma.superhero.count({
     where: {
       nickname,

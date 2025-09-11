@@ -4,7 +4,15 @@ let prisma: PrismaClient;
 
 const createPrismaClient = (): PrismaClient => {
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log:
+      process.env.NODE_ENV === 'development'
+        ? ['query', 'error', 'warn']
+        : ['error'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
   });
 };
 
@@ -18,6 +26,7 @@ const getPrismaClient = (): PrismaClient => {
 const disconnectDatabase = async (): Promise<void> => {
   if (prisma) {
     await prisma.$disconnect();
+    prisma = null as any; // Reset for potential reconnection
   }
 };
 

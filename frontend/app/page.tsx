@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useSuperheroStore } from '@/store/superheroStore';
-import { SuperheroListItem, CreateSuperheroData } from '@/types/superhero';
+import {
+  SuperheroListItem,
+  CreateSuperheroData,
+  UpdateSuperheroData,
+} from '@/types/superhero';
 import { SuperheroCard } from '@/components/SuperheroCard';
 import { SuperheroForm } from '@/components/SuperheroForm';
 import { SuperheroDetail } from '@/components/SuperheroDetail';
@@ -47,7 +51,9 @@ export default function HomePage() {
     setViewMode('list');
   };
 
-  const handleUpdateSuperhero = async (data: CreateSuperheroData) => {
+  const handleUpdateSuperhero = async (
+    data: CreateSuperheroData | UpdateSuperheroData
+  ) => {
     if (currentSuperhero) {
       await updateSuperhero({ ...data, id: currentSuperhero.id });
       setViewMode('detail');
@@ -174,15 +180,16 @@ export default function HomePage() {
               </div>
             ) : (
               <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="flex flex-wrap justify-center gap-6">
                   {superheroes?.map((superhero) => (
-                    <SuperheroCard
-                      key={superhero.id}
-                      superhero={superhero}
-                      onView={handleViewSuperhero}
-                      onEdit={handleEditSuperhero}
-                      onDelete={confirmDelete}
-                    />
+                    <div key={superhero.id} className="w-full sm:w-80 md:w-72 lg:w-80 xl:w-72">
+                      <SuperheroCard
+                        superhero={superhero}
+                        onView={handleViewSuperhero}
+                        onEdit={handleEditSuperhero}
+                        onDelete={confirmDelete}
+                      />
+                    </div>
                   ))}
                 </div>
 

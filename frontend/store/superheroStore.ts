@@ -156,8 +156,38 @@ export const useSuperheroStore = create<SuperheroStore>((set, get) => ({
           body: JSON.stringify(updatePayload),
         });
       },
-      (response: SuperheroResponse) => {
-        set({ currentSuperhero: response.data });
+      async (response: SuperheroResponse) => {
+        // If there are images to upload, handle them separately
+        if (data.images && data.images.length > 0) {
+          const formData = new FormData();
+          Array.from(data.images).forEach((file) => {
+            formData.append('images', file);
+          });
+
+          try {
+            const imageResponse = await fetch(`${API_BASE_URL}/superheroes/${data.id}/images`, {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!imageResponse.ok) {
+              throw new Error('Failed to upload images');
+            }
+          } catch (error) {
+            console.error('Error uploading images:', error);
+            // Continue with the update even if image upload fails
+          }
+        }
+
+        // Fetch the updated superhero with all images
+        const updatedResponse = await fetch(`${API_BASE_URL}/superheroes/${data.id}`);
+        if (updatedResponse.ok) {
+          const updatedData = await updatedResponse.json();
+          set({ currentSuperhero: updatedData.data });
+        } else {
+          set({ currentSuperhero: response.data });
+        }
+        
         // Refresh the list to get updated data
         get().fetchSuperheroes(get().pagination.page, get().pagination.limit);
       },

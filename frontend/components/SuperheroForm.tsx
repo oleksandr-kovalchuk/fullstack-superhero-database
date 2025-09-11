@@ -6,6 +6,7 @@ import {
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import Image from 'next/image';
 
 interface SuperheroFormProps {
   superhero?: Superhero | null;
@@ -77,10 +78,12 @@ export const SuperheroForm = ({
     if (!validateForm()) return;
 
     try {
-      await onSubmit({
+      const submitData = {
         ...formData,
-        images: selectedFiles.length > 0 ? selectedFiles : undefined,
-      });
+        ...(superhero && { id: superhero.id }),
+        ...(selectedFiles.length > 0 && { images: selectedFiles }),
+      };
+      await onSubmit(submitData);
     } catch (error) {
       console.error('Form submission error:', error);
     }
@@ -115,7 +118,7 @@ export const SuperheroForm = ({
     if (oversizedFiles.length > 0) {
       setErrors(prev => ({
         ...prev,
-        images: 'File size must be less than 5MB.'
+        images: 'File size must be less than 10MB.'
       }));
       return;
     }
@@ -217,7 +220,7 @@ export const SuperheroForm = ({
             <p className="text-sm text-red-600">{errors.images}</p>
           )}
           <p className="text-xs text-gray-500">
-            Accepted formats: JPEG, PNG, GIF, WebP. Maximum size: 5MB per file.
+            Accepted formats: JPEG, PNG, GIF, WebP. Maximum size: 10MB per file.
           </p>
         </div>
 
@@ -230,10 +233,13 @@ export const SuperheroForm = ({
                   key={index}
                   className="relative group bg-gray-50 p-2 rounded-md"
                 >
-                  <img
+                  <Image
                     src={previewUrls[index]}
                     alt={`Preview ${index + 1}`}
-                    className="w-full h-24 object-cover rounded"
+                    width={96}
+                    height={96}
+                    className="w-full h-24 object-contain rounded bg-gray-100"
+                    unoptimized
                   />
                   <div className="mt-1 text-xs text-gray-600 truncate">
                     {file.name}
@@ -259,10 +265,13 @@ export const SuperheroForm = ({
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {superhero.images.map((image) => (
                 <div key={image.id} className="bg-gray-50 p-2 rounded-md">
-                  <img
+                  <Image
                     src={`http://localhost:3001/uploads/${image.filename}`}
                     alt={image.originalName}
+                    width={96}
+                    height={96}
                     className="w-full h-24 object-cover rounded"
+                    unoptimized
                   />
                   <div className="mt-1 text-xs text-gray-600 truncate">
                     {image.originalName}

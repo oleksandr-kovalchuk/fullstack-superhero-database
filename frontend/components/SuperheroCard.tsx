@@ -1,5 +1,6 @@
 import { SuperheroListItem } from '@/types/superhero';
 import { Button } from '@/components/ui/Button';
+import Image from 'next/image';
 
 interface SuperheroCardProps {
   superhero: SuperheroListItem;
@@ -20,21 +21,13 @@ export const SuperheroCard = ({
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="h-48 bg-gray-200 flex items-center justify-center">
         {primaryImage ? (
-          <img
+          <Image
             src={`http://localhost:3001/uploads/${primaryImage.filename}`}
             alt={superhero.nickname}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              target.parentElement!.innerHTML = `
-                <div class="flex items-center justify-center h-full text-gray-400">
-                  <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-              `;
-            }}
+            width={288}
+            height={192}
+            className="w-full h-full object-contain"
+            unoptimized
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

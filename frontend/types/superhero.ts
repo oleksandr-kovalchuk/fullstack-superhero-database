@@ -40,6 +40,7 @@ export interface CreateSuperheroData {
 
 export interface UpdateSuperheroData extends Partial<Omit<CreateSuperheroData, 'images'>> {
   id: string;
+  images?: FileList | File[];
 }
 
 export interface PaginationData {

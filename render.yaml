@@ -4,8 +4,6 @@ services:
     name: superhero-database
     env: postgresql
     plan: free
-    databaseName: superhero_db
-    user: superhero_user
 
   # Backend API Service
   - type: web
@@ -32,11 +30,9 @@ services:
         value: 10000
     healthCheckPath: /health
 
-  # Frontend Web Service
-  - type: web
+  # Frontend Static Site
+  - type: static
     name: superhero-frontend
-    env: static
-    plan: free
     buildCommand: |
       cd frontend
       npm ci

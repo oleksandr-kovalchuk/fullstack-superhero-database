@@ -26,10 +26,8 @@
 1. На Render Dashboard натисніть "New +" → "PostgreSQL"
 2. Налаштування:
    - **Name**: `superhero-database`
-   - **Database**: `superhero_db`
-   - **User**: `superhero_user`
    - **Plan**: Free (або Starter для production)
-3. Збережіть connection string
+3. Render автоматично створить базу даних з унікальними credentials
 
 #### 2. Деплой Backend API
 

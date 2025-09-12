@@ -9,15 +9,12 @@ import {
 } from '@/types/superhero';
 import { SuperheroCard } from '@/components/SuperheroCard';
 import { SuperheroForm } from '@/components/SuperheroForm';
-import { SuperheroDetail } from '@/components/SuperheroDetail';
 import { Pagination } from '@/components/Pagination';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
 import { UI_CONFIG } from '@/lib/constants';
-
-type ViewMode = 'list' | 'detail' | 'create' | 'edit';
 
 export default function HomePage() {
   const {
@@ -34,7 +31,8 @@ export default function HomePage() {
     setError,
   } = useSuperheroStore();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('create');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -49,7 +47,7 @@ export default function HomePage() {
 
   const handleCreateSuperhero = async (data: CreateSuperheroData) => {
     await createSuperhero(data);
-    setViewMode('list');
+    setShowModal(false);
   };
 
   const handleUpdateSuperhero = async (
@@ -57,18 +55,29 @@ export default function HomePage() {
   ) => {
     if (currentSuperhero) {
       await updateSuperhero({ ...data, id: currentSuperhero.id });
-      setViewMode('detail');
+      setModalMode('view');
     }
   };
 
   const handleViewSuperhero = async (superhero: SuperheroListItem) => {
     await fetchSuperheroById(superhero.id);
-    setViewMode('detail');
+    setModalMode('view');
+    setShowModal(true);
   };
 
   const handleEditSuperhero = async (superhero: SuperheroListItem) => {
     await fetchSuperheroById(superhero.id);
-    setViewMode('edit');
+    setModalMode('edit');
+    setShowModal(true);
+  };
+
+  const handleCreateNew = () => {
+    setModalMode('create');
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
   };
 
   const confirmDelete = (id: string) => {
@@ -84,8 +93,8 @@ export default function HomePage() {
       await deleteSuperhero(deleteId);
       setShowDeleteDialog(false);
       setDeleteId(null);
-      if (viewMode === 'detail' && currentSuperhero?.id === deleteId) {
-        setViewMode('list');
+      if (modalMode === 'view' && currentSuperhero?.id === deleteId) {
+        setShowModal(false);
       }
     } catch (error) {
       console.error('Delete error:', error);
@@ -94,120 +103,9 @@ export default function HomePage() {
     }
   };
 
-  const renderContent = () => {
-    switch (viewMode) {
-      case 'detail':
-        return currentSuperhero ? (
-          <SuperheroDetail
-            superhero={currentSuperhero}
-            onEdit={() => setViewMode('edit')}
-            onDelete={() => confirmDelete(currentSuperhero.id)}
-            onClose={() => setViewMode('list')}
-          />
-        ) : null;
-
-      case 'create':
-      case 'edit':
-        return (
-          <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">
-              {viewMode === 'create'
-                ? 'Create New Superhero'
-                : 'Edit Superhero'}
-            </h1>
-            <SuperheroForm
-              superhero={viewMode === 'edit' ? currentSuperhero : null}
-              onSubmit={
-                viewMode === 'create'
-                  ? handleCreateSuperhero
-                  : handleUpdateSuperhero
-              }
-              onCancel={() =>
-                setViewMode(viewMode === 'edit' ? 'detail' : 'list')
-              }
-              loading={loading}
-            />
-          </div>
-        );
-
-      default:
-        return (
-          <div>
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Superhero Database
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Manage your collection of superheroes with full CRUD
-                  operations
-                </p>
-              </div>
-              <Button onClick={() => setViewMode('create')}>
-                Create New Superhero
-              </Button>
-            </div>
-
-            {loading && superheroes.length === 0 ? (
-              <div className="flex justify-center py-12">
-                <LoadingSpinner size="lg" />
-              </div>
-            ) : superheroes?.length === 0 ? (
-              <div className="text-center py-12">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No superheroes
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating a new superhero.
-                </p>
-                <div className="mt-6">
-                  <Button onClick={() => setViewMode('create')}>
-                    Create New Superhero
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="flex flex-wrap justify-center gap-6">
-                  {superheroes?.map((superhero, index) => (
-                    <div
-                      key={superhero.id}
-                      className="w-full sm:w-80 md:w-72 lg:w-80 xl:w-72"
-                    >
-                      <SuperheroCard
-                        superhero={superhero}
-                        onView={handleViewSuperhero}
-                        onEdit={handleEditSuperhero}
-                        onDelete={confirmDelete}
-                        priority={index < UI_CONFIG.PRIORITY_IMAGES_COUNT} // Prioritize first few images (likely above the fold)
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <Pagination
-                  currentPage={pagination.page}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                  loading={loading}
-                />
-              </div>
-            )}
-          </div>
-        );
+  const handleDeleteFromModal = () => {
+    if (currentSuperhero) {
+      confirmDelete(currentSuperhero.id);
     }
   };
 
@@ -218,7 +116,95 @@ export default function HomePage() {
           <ErrorAlert message={error} onDismiss={() => setError(null)} />
         )}
 
-        {renderContent()}
+        <div>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Superhero Database
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your collection of superheroes with full CRUD
+                operations
+              </p>
+            </div>
+            <Button onClick={handleCreateNew}>
+              Create New Superhero
+            </Button>
+          </div>
+
+          {loading && superheroes.length === 0 ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : superheroes?.length === 0 ? (
+            <div className="text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No superheroes
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Get started by creating a new superhero.
+              </p>
+              <div className="mt-6">
+                <Button onClick={handleCreateNew}>
+                  Create New Superhero
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="flex flex-wrap justify-center gap-6">
+                {superheroes?.map((superhero, index) => (
+                  <div
+                    key={superhero.id}
+                    className="w-full sm:w-80 md:w-72 lg:w-80 xl:w-72"
+                  >
+                    <SuperheroCard
+                      superhero={superhero}
+                      onView={handleViewSuperhero}
+                      onEdit={handleEditSuperhero}
+                      onDelete={confirmDelete}
+                      priority={index < UI_CONFIG.PRIORITY_IMAGES_COUNT}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                loading={loading}
+              />
+            </div>
+          )}
+        </div>
+
+        <SuperheroForm
+          isOpen={showModal}
+          onClose={handleCloseModal}
+          superhero={modalMode !== 'create' ? currentSuperhero : null}
+          onSubmit={
+            modalMode === 'create'
+              ? handleCreateSuperhero
+              : handleUpdateSuperhero
+          }
+          onDelete={handleDeleteFromModal}
+          loading={loading}
+          viewMode={modalMode}
+        />
 
         <ConfirmDialog
           isOpen={showDeleteDialog}

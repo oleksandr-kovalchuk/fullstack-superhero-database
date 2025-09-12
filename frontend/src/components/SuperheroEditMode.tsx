@@ -3,6 +3,7 @@ import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
 import { Button } from './ui/Button';
 import { getImageUrl } from '../lib/utils';
+import React from 'react';
 
 interface FormData {
   nickname: string;

@@ -7,6 +7,7 @@ import {
   removeItemAtIndex,
   addItemsToArray,
 } from '../lib/utils';
+import React from 'react';
 
 export const useFileUpload = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);

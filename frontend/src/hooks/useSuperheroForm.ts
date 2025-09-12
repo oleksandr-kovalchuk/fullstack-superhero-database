@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Superhero, CreateSuperheroData } from '../types/superhero';
 import { validateSuperheroForm } from '../lib/utils';
 
@@ -112,18 +112,7 @@ export const useSuperheroForm = ({
   };
 
   const handleCancel = (onClose: () => void) => {
-    if (currentViewMode === 'edit' && superhero) {
-      setCurrentViewMode('view');
-      setFormData({
-        nickname: superhero.nickname,
-        realName: superhero.realName,
-        originDescription: superhero.originDescription,
-        superpowers: superhero.superpowers,
-        catchPhrase: superhero.catchPhrase,
-      });
-    } else {
-      onClose();
-    }
+    onClose();
   };
 
   return {

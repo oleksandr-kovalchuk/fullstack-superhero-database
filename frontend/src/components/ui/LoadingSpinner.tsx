@@ -9,7 +9,6 @@ export const LoadingSpinner = ({
   size = 'md',
   className = '',
 }: LoadingSpinnerProps) => {
-
   return (
     <div className={`flex justify-center ${className}`}>
       <svg

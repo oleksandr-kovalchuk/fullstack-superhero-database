@@ -30,7 +30,9 @@ export default function HomePage() {
   } = useSuperheroStore();
 
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('create');
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>(
+    'create'
+  );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -121,13 +123,10 @@ export default function HomePage() {
                 Superhero Database
               </h1>
               <p className="text-gray-600 mt-1">
-                Manage your collection of superheroes with full CRUD
-                operations
+                Manage your collection of superheroes with full CRUD operations
               </p>
             </div>
-            <Button onClick={handleCreateNew}>
-              Create New Superhero
-            </Button>
+            <Button onClick={handleCreateNew}>Create New Superhero</Button>
           </div>
 
           {loading && superheroes.length === 0 ? (
@@ -156,9 +155,7 @@ export default function HomePage() {
                 Get started by creating a new superhero.
               </p>
               <div className="mt-6">
-                <Button onClick={handleCreateNew}>
-                  Create New Superhero
-                </Button>
+                <Button onClick={handleCreateNew}>Create New Superhero</Button>
               </div>
             </div>
           ) : (

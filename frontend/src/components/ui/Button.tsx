@@ -1,5 +1,9 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
-import { BUTTON_BASE_CLASSES, BUTTON_VARIANT_CLASSES, BUTTON_SIZE_CLASSES } from '../../lib/constants';
+import {
+  BUTTON_BASE_CLASSES,
+  BUTTON_VARIANT_CLASSES,
+  BUTTON_SIZE_CLASSES,
+} from '../../lib/constants';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -17,7 +21,6 @@ export const Button = ({
   className = '',
   ...props
 }: ButtonProps) => {
-
   return (
     <button
       className={`${BUTTON_BASE_CLASSES} ${BUTTON_VARIANT_CLASSES[variant]} ${BUTTON_SIZE_CLASSES[size]} ${className}`}

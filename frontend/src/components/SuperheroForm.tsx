@@ -6,6 +6,7 @@ import { SuperheroEditMode } from './SuperheroEditMode';
 import { useSuperheroForm } from '../hooks/useSuperheroForm';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { getModalTitle, getModalSize } from '../lib/formUtils';
+import React from 'react';
 
 interface SuperheroFormProps {
   isOpen: boolean;

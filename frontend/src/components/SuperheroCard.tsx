@@ -27,7 +27,7 @@ export const SuperheroCard = ({
             src={getImageUrl(primaryImage.filename)}
             alt={superhero.nickname}
             className="w-full h-full object-contain"
-            loading={priority ? "eager" : "lazy"}
+            loading={priority ? 'eager' : 'lazy'}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

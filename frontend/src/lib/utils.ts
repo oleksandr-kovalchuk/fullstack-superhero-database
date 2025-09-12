@@ -32,7 +32,9 @@ export const validateFiles = (
 };
 
 export const getImageUrl = (filename: string): string => {
-  const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+  const baseUrl =
+    import.meta.env.VITE_API_URL?.replace('/api', '') ||
+    'http://localhost:3001';
   return `${baseUrl}/uploads/${filename}`;
 };
 
@@ -105,13 +107,22 @@ export const validateSuperheroForm = (formData: {
   const realNameError = validateFormField(formData.realName, 'Real name');
   if (realNameError) errors.realName = realNameError;
 
-  const originError = validateFormField(formData.originDescription, 'Origin description');
+  const originError = validateFormField(
+    formData.originDescription,
+    'Origin description'
+  );
   if (originError) errors.originDescription = originError;
 
-  const superpowersError = validateFormField(formData.superpowers, 'Superpowers');
+  const superpowersError = validateFormField(
+    formData.superpowers,
+    'Superpowers'
+  );
   if (superpowersError) errors.superpowers = superpowersError;
 
-  const catchPhraseError = validateFormField(formData.catchPhrase, 'Catch phrase');
+  const catchPhraseError = validateFormField(
+    formData.catchPhrase,
+    'Catch phrase'
+  );
   if (catchPhraseError) errors.catchPhrase = catchPhraseError;
 
   return errors;

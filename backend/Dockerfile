@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 # Copy package files
 COPY package*.json ./
 
+# Copy Prisma schema (needed for postinstall script)
+COPY prisma ./prisma/
+
 # Install dependencies (including dev dependencies for build)
 RUN npm ci
 

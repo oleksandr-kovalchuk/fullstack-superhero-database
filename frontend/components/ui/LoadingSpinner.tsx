@@ -1,3 +1,5 @@
+import { SPINNER_SIZE_CLASSES } from '@/lib/constants';
+
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -7,16 +9,11 @@ export const LoadingSpinner = ({
   size = 'md',
   className = '',
 }: LoadingSpinnerProps) => {
-  const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
-  };
 
   return (
     <div className={`flex justify-center ${className}`}>
       <svg
-        className={`animate-spin ${sizeClasses[size]} text-blue-600`}
+        className={`animate-spin ${SPINNER_SIZE_CLASSES[size]} text-blue-600`}
         fill="none"
         viewBox="0 0 24 24"
       >

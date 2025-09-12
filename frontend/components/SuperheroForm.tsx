@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { FILE_CONFIG } from '@/lib/constants';
-import { validateFiles, getImageUrl } from '@/lib/utils';
+import { validateFiles, getImageUrl, validateSuperheroForm, createPreviewUrl, revokePreviewUrl, removeItemAtIndex, addItemsToArray } from '@/lib/utils';
 import Image from 'next/image';
 
 interface SuperheroFormProps {
@@ -48,22 +48,12 @@ export const SuperheroForm = ({
 
   useEffect(() => {
     return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewUrls.forEach(revokePreviewUrl);
     };
   }, [previewUrls]);
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.nickname.trim()) newErrors.nickname = 'Nickname is required';
-    if (!formData.realName.trim()) newErrors.realName = 'Real name is required';
-    if (!formData.originDescription.trim())
-      newErrors.originDescription = 'Origin description is required';
-    if (!formData.superpowers.trim())
-      newErrors.superpowers = 'Superpowers are required';
-    if (!formData.catchPhrase.trim())
-      newErrors.catchPhrase = 'Catch phrase is required';
-
+    const newErrors = validateSuperheroForm(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -109,10 +99,10 @@ export const SuperheroForm = ({
       setErrors((prev) => ({ ...prev, images: '' }));
     }
 
-    setSelectedFiles((prev) => [...prev, ...valid]);
+    setSelectedFiles((prev) => addItemsToArray(prev, valid));
 
-    const newPreviewUrls = valid.map((file) => URL.createObjectURL(file));
-    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
+    const newPreviewUrls = valid.map(createPreviewUrl);
+    setPreviewUrls((prev) => addItemsToArray(prev, newPreviewUrls));
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -120,10 +110,10 @@ export const SuperheroForm = ({
   };
 
   const removeImage = (index: number) => {
-    URL.revokeObjectURL(previewUrls[index]);
+    revokePreviewUrl(previewUrls[index]);
 
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => removeItemAtIndex(prev, index));
+    setPreviewUrls((prev) => removeItemAtIndex(prev, index));
   };
 
   return (

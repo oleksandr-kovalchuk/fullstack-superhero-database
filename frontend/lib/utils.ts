@@ -84,3 +84,57 @@ export const calculatePagination = (
     hasPrevPage: page > 1,
   };
 };
+
+export const validateFormField = (value: string, fieldName: string): string => {
+  if (!value.trim()) {
+    return `${fieldName} is required`;
+  }
+  return '';
+};
+
+export const validateSuperheroForm = (formData: {
+  nickname: string;
+  realName: string;
+  originDescription: string;
+  superpowers: string;
+  catchPhrase: string;
+}): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  const nicknameError = validateFormField(formData.nickname, 'Nickname');
+  if (nicknameError) errors.nickname = nicknameError;
+
+  const realNameError = validateFormField(formData.realName, 'Real name');
+  if (realNameError) errors.realName = realNameError;
+
+  const originError = validateFormField(formData.originDescription, 'Origin description');
+  if (originError) errors.originDescription = originError;
+
+  const superpowersError = validateFormField(formData.superpowers, 'Superpowers');
+  if (superpowersError) errors.superpowers = superpowersError;
+
+  const catchPhraseError = validateFormField(formData.catchPhrase, 'Catch phrase');
+  if (catchPhraseError) errors.catchPhrase = catchPhraseError;
+
+  return errors;
+};
+
+export const createPreviewUrl = (file: File): string => {
+  return URL.createObjectURL(file);
+};
+
+export const revokePreviewUrl = (url: string): void => {
+  URL.revokeObjectURL(url);
+};
+
+export const revokeAllPreviewUrls = (urls: string[]): void => {
+  urls.forEach(revokePreviewUrl);
+};
+
+export const removeItemAtIndex = <T>(array: T[], index: number): T[] => {
+  return array.filter((_, i) => i !== index);
+};
+
+export const addItemsToArray = <T>(array: T[], items: T[]): T[] => {
+  return [...array, ...items];
+};

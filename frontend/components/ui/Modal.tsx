@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from 'react';
+import { MODAL_SIZE_CLASSES } from '@/lib/constants';
 
 interface ModalProps {
   isOpen: boolean;
@@ -33,12 +34,6 @@ export const Modal = ({
 
   if (!isOpen) return null;
 
-  const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -48,7 +43,7 @@ export const Modal = ({
           onClick={onClose}
         />
         <div
-          className={`relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full ${sizeClasses[size]}`}
+          className={`relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full ${MODAL_SIZE_CLASSES[size]}`}
         >
           <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">

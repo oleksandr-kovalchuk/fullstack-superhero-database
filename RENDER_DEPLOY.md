@@ -60,6 +60,7 @@
 2. Підключіть GitHub репозиторій
 3. Налаштування:
    - **Name**: `superhero-frontend`
+   - **Environment**: `Static`
    - **Build Command**:
      ```bash
      cd frontend

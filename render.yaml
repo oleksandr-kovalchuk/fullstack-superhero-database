@@ -31,8 +31,10 @@ services:
     healthCheckPath: /health
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: superhero-frontend
+    env: static
+    plan: free
     buildCommand: |
       cd frontend
       npm ci

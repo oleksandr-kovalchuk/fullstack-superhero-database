@@ -4,7 +4,7 @@ A full-stack web application for managing a superhero database with CRUD operati
 
 ## 🏗️ Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, React Router
 - **Backend**: Node.js, Express, TypeScript, Prisma ORM
 - **Database**: PostgreSQL with pgAdmin
 - **Containerization**: Docker and Docker Compose
@@ -49,6 +49,7 @@ npm run dev
 # Frontend (new terminal)
 cd frontend
 npm install
+# Create .env file with VITE_API_URL=http://localhost:3001/api
 npm run dev
 ```
 

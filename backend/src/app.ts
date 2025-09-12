@@ -15,15 +15,11 @@ const createApp = (): express.Application => {
   );
 
   app.use(cors({
-    origin: [
-      'http://localhost:5173', // Vite dev server
-      'http://localhost:3000', // Alternative dev port
-      'https://superhero-frontend-25c9.onrender.com', // Your Render frontend
-      ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
-    ],
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    optionsSuccessStatus: 200
   }));
 
   app.use(express.json({ limit: '10mb' }));

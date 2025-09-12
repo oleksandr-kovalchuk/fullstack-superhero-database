@@ -32,10 +32,8 @@ export const validateFiles = (
 };
 
 export const getImageUrl = (filename: string): string => {
-  return `${
-    import.meta.env.VITE_API_URL?.replace('/api', '') ||
-    'http://localhost:3001'
-  }/uploads/${filename}`;
+  const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+  return `${baseUrl}/uploads/${filename}`;
 };
 
 export const createFormData = (

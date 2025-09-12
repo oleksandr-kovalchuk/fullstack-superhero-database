@@ -64,11 +64,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3001/api
     container_name: superhero_frontend
     restart: always
     environment:
       NODE_ENV: production
-      VITE_API_URL: http://localhost:3001/api
     ports:
       - "3000:80"
     depends_on:

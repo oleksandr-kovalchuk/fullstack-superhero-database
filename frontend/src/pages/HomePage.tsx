@@ -55,7 +55,7 @@ export default function HomePage() {
   ) => {
     if (currentSuperhero) {
       await updateSuperhero({ ...data, id: currentSuperhero.id });
-      setModalMode('view');
+      setShowModal(false);
     }
   };
 

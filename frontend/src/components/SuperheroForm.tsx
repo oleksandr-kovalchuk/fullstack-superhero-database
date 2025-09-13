@@ -56,8 +56,16 @@ export const SuperheroForm = ({
         resetForm();
         resetFiles();
       }
+    } else {
+      resetFiles();
     }
   }, [isOpen, currentViewMode, resetForm, resetFiles]);
+
+  useEffect(() => {
+    if (isOpen) {
+      resetFiles();
+    }
+  }, [currentViewMode, isOpen, resetFiles]);
 
   const handleSubmit = (e: React.FormEvent) => {
     const additionalData =

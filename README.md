@@ -2,40 +2,18 @@
 
 A full-stack web application for managing a superhero database with CRUD operations, image uploads, and a modern responsive UI.
 
-## 🌐 Live Demo
-
-**🚀 [View Live Application](https://superhero-frontend-25c9.onrender.com/)**
-
-The application is deployed on Render with a PostgreSQL database and includes all features working in production.
-
 ## 🏗️ Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, React Router
 - **Backend**: Node.js, Express, TypeScript, Prisma ORM
 - **Database**: PostgreSQL with pgAdmin
 - **Containerization**: Docker and Docker Compose
-- **Deployment**: Render (Frontend + Backend + Database)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose
 - Git
-
-### 🌐 Production Deployment (Render)
-
-The application is currently deployed on [Render](https://render.com/) with the following setup:
-
-- **Frontend**: Static site deployment with automatic builds from the main branch
-- **Backend**: Web service with Node.js runtime
-- **Database**: PostgreSQL service with persistent storage
-- **Domain**: https://superhero-frontend-25c9.onrender.com/
-
-The deployment includes:
-- Automatic builds and deployments on git push
-- Environment variables configured for production
-- File upload support with persistent storage
-- CORS configured for cross-origin requests
 
 ### Running the Application
 
@@ -85,7 +63,6 @@ npm run dev
 - **Database**: PostgreSQL with Prisma ORM and automatic migrations
 - **Security**: Helmet.js, CORS, file upload validation
 - **TypeScript**: Full-stack type safety
-- **Production Ready**: Deployed on Render with persistent storage and automatic scaling
 
 ## 🐳 Docker Commands
 
